@@ -9,9 +9,9 @@ from typing import Callable
 
 from pydantic import BaseModel
 
-from connector import KafkaConnector, KAFKA_BOOTSTRAP
-from exceptions import ConnectorError
-from models import JobResponse
+from .connector import KafkaConnector, KAFKA_BOOTSTRAP
+from .exceptions import ConnectorError
+from .models import JobResponse
 
 logger = logging.getLogger(__name__)
 logger.setLevel(os.getenv("LOGGING_LEVEL", "INFO"))

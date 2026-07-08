@@ -2,13 +2,13 @@
 
 __version__ = "0.1.0"
 
-from connector import KafkaConnector, Requester
-from exceptions import (
+from .connector import KafkaConnector, Requester
+from .exceptions import (
     KafkaAdapterError,
     ConnectorError,
 )
-from job_adapter import JobAdapter
-from models import (
+from .job_adapter import JobAdapter
+from .models import (
     JobResponse,
 )
 
