@@ -21,11 +21,7 @@ classifiers = [
 ]
 dependencies = [
     "kafka-python==2.2.15",
-    "numpy==1.23.5",
-    "cimpy>=0.3.0",
     "pydantic>=2.0",
-    "pydantic-settings>=2.0",
-    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
