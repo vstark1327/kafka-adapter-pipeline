@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+from time import time
 from typing import Callable
 
 from pydantic import BaseModel
@@ -82,44 +83,48 @@ class JobAdapter:
         self._running = True
         logger.info(f"Starting job listener on {self.job_topic}")
 
-        try:
-            for key, message in self.connector._listen_for_response(self.job_topic):
-                if not self._running:
-                    logger.info("Stopping job listener")
-                    break
+        while self._running:
+            try:
+                for key, message in self.connector._listen_for_response(self.job_topic):
+                    if not self._running:
+                        logger.info("Stopping job listener")
+                        break
 
-                try:
-                    if key is None:
-                        logger.info(f"received no key....going to next message!")
-                        continue
-                    logger.info(f"Processing job {key}")
-                    logger.info(f"Received msg: {message}")
-                    
-                    job = self.parse_job(message)
-                    result = self.job_processor(job)
-                    logger.info(f"Result: {result}")
-                    logger.info(f"Sending response for job {key} to {self.response_topic}")
-                    self.respond(key, result)
-
-                except Exception as e:
-                    logger.error(f"Error processing job {key}: {e}", exc_info=e)
-
-                    if self.response_topic and self.job_class:
+                    try:
+                        if key is None:
+                            logger.info(f"received no key....going to next message!")
+                            continue
+                        logger.info(f"Processing job {key}")
+                        logger.info(f"Received msg: {message}")
                         
-                        error_response = JobResponse(
-                            job_id=key or "unknown",
-                            status="failed",
-                            error=str(e),
-                        )
-                        self.respond(key, error_response)
+                        job = self.parse_job(message)
+                        result = self.job_processor(job)
+                        logger.info(f"Result: {result}")
+                        logger.info(f"Sending response for job {key} to {self.response_topic}")
+                        self.respond(key, result)
 
-        except KeyboardInterrupt:
-            logger.info("Job listener interrupted by user")
-        except Exception as e:
-            logger.error(f"Job listener error: {e}", exc_info=e)
-        finally:
-            self._running = False
-            logger.info("Job listener stopped")
+                    except Exception as e:
+                        logger.error(f"Error processing job {key}: {e}", exc_info=e)
+
+                        if self.response_topic and self.job_class:
+                            
+                            error_response = JobResponse(
+                                job_id=key or "unknown",
+                                status="failed",
+                                error=str(e),
+                            )
+                            self.respond(key, error_response)
+
+            except KeyboardInterrupt:
+                logger.info("Job listener interrupted by user")
+                self._running = False
+                break
+            except Exception as e:
+                logger.error(f"Job listener error, retrying in 5s: {e}", exc_info=e)
+                time.sleep(5)
+        
+        logger.info("Job listener stopped")
+    
 
     def parse_job(self, message: str):
         """Parse incoming job message into Pydantic model."""
