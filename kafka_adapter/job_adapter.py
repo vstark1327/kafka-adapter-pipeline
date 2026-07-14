@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import logging
 import os
-from time import time
+import time
 from typing import Callable
 
 from pydantic import BaseModel
